@@ -1,0 +1,3 @@
+# 외부 라이브러리 코드 - GitHub 언어 통계에서 제외
+src/main/webapp/resources/css/scss/** linguist-vendored
+src/main/webapp/resources/css/lib/** linguist-vendored
