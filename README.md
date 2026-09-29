@@ -347,9 +347,7 @@ Spring MVC 리팩토링과 함께 기존 프로젝트의 기능을 확장했습�
 
 ## 6. 리팩토링 코드 비교
 
-### 동아리 가입 승인 / 거절
-
-가입 승인과 거절을 각각의 Servlet에서 처리하던 구조를 Spring MVC의 계층형 구조로 리팩토링했습니다.
+> 동아리 가입 승인 / 거절 기능의 리팩토링 전후 코드
 
 ### Before — JSP/Servlet
 
@@ -577,21 +575,27 @@ public void updateReject(int formNum) throws Exception {
 </insert>
 ```
 
-### 개선 결과
+---
 
-- 가입 승인·거절을 각각 처리하던 Servlet을 **ClubFormController에서 통합 관리**
-- Controller - Service - DAO로 역할을 분리하고 SQL을 MyBatis Mapper로 관리하도록 구조 개선
+## 7. 시연 영상
+
+### 사용자
+
+https://github.com/user-attachments/assets/d755b8b0-f7f2-4939-960a-22f2abdcd381
+
+### 관리자
+
+https://github.com/user-attachments/assets/67209d6c-8813-43ff-8948-a1fed5cb82f0
 
 ---
 
-## 7. Troubleshooting
+## 8. Troubleshooting
 
-### 7.1 회원 삭제 시 FK 제약조건 오류
+### 8.1 회원 삭제 시 FK 제약조건 오류
 
 #### 문제
 
-관리자가 회원을 삭제하는 과정에서 해당 회원이 작성한 게시글 삭제 시  
-`ORA-02292` 오류가 발생했습니다.
+관리자가 회원을 삭제하는 과정에서 해당 회원이 작성한 게시글을 삭제할 때 `ORA-02292` 오류가 발생했습니다.
 
 ```text
 ORA-02292: integrity constraint violated
@@ -600,8 +604,9 @@ ORA-02292: integrity constraint violated
 
 #### 원인
 
-`CLUBBOARD`의 `BOARDNUM`을 `BOARDFILE`이 FK로 참조하고 있었지만,  
-회원 삭제 시 첨부파일을 삭제하지 않고 게시글을 먼저 삭제하고 있었습니다.
+회원이 작성한 게시글을 삭제하는 로직에서 `CLUBBOARD` 데이터를 바로 삭제하고 있었습니다.
+
+하지만 `BOARDFILE`이 `CLUBBOARD`의 `BOARDNUM`을 FK로 참조하고 있어, 게시글에 첨부파일이 존재하는 경우 참조 데이터가 남아 있는 상태에서 부모 데이터 삭제가 시도되었습니다.
 
 ```text
 CLUBBOARD (BOARDNUM PK)
@@ -609,20 +614,13 @@ CLUBBOARD (BOARDNUM PK)
 BOARDFILE (BOARDNUM FK)
 ```
 
-따라서 `BOARDFILE`에 참조 데이터가 남아 있는 상태에서  
-부모 데이터인 `CLUBBOARD`를 삭제하면서 FK 제약조건 위반이 발생했습니다.
+기존의 일반 게시글 삭제에서는 첨부파일을 먼저 삭제하고 게시글을 삭제했지만, 회원 삭제 로직에서는 이 과정이 누락된 것이 원인이었습니다.
 
 #### 해결
 
-회원이 작성한 게시글의 첨부파일을 먼저 삭제한 후  
-게시글과 회원 데이터를 삭제하도록 순서를 변경했습니다.
+회원 삭제 시에도 FK 관계를 고려하여 첨부파일 → 게시글 → 회원 순서로 데이터를 삭제하도록 변경했습니다.
 
-```text
-BOARDFILE → CLUBBOARD → MEMBER
-```
-
-`STUDENTID`를 기준으로 회원이 작성한 게시글의 `BOARDNUM`을 조회하여  
-해당 게시글을 참조하는 첨부파일을 먼저 삭제했습니다.
+먼저 `STUDENTID`로 회원이 작성한 게시글을 조회하고, 해당 게시글의 `BOARDNUM`을 참조하는 첨부파일을 삭제하도록 쿼리를 추가했습니다.
 
 ```sql
 DELETE FROM BOARDFILE
@@ -633,7 +631,7 @@ WHERE BOARDNUM IN (
 );
 ```
 
-이후 게시글과 회원 데이터를 순서대로 삭제하도록 구성했습니다.
+이후 기존 게시글 삭제 로직이 실행되도록 삭제 순서를 변경했습니다.
 
 ```java
 // 회원이 작성한 게시글의 첨부파일 삭제
@@ -643,14 +641,13 @@ clubBoardDao.deleteMemberFile(studentId);
 clubBoardDao.deleteMember(studentId);
 ```
 
-또한 회원 삭제 과정에서 여러 테이블의 데이터가 함께 변경되므로  
-`@Transactional`을 적용하여 처리 중 오류 발생 시 전체 작업이 롤백되도록 구성했습니다.
+또한 회원 삭제는 여러 테이블의 데이터 삭제가 연속해서 수행되는 작업이므로 `@Transactional`을 적용하여  
+삭제 과정에서 하나의 작업이라도 실패하면 전체 작업이 롤백되도록 하여 데이터 일관성을 유지했습니다.
 
 ```java
 @Transactional
 @Override
 public void delete(String studentId) throws Exception {
-
     clubFormDao.deleteMember(studentId);
     clubMemberDao.deleteMember(studentId);
     clubBoardDao.deleteMemberFile(studentId);
@@ -662,41 +659,37 @@ public void delete(String studentId) throws Exception {
 
 ---
 
-### 7.2 첨부파일 원본 파일명 표시 오류
+### 8.2 첨부파일 원본 파일명 표시 오류
 
 #### 문제
 
-게시글 수정 화면에서 기존 첨부파일의 파일명 앞에  
-`0_`, `b_` 등의 불필요한 문자가 포함되어 표시되는 문제가 발생했습니다.
+게시글 수정 화면에서 기존 첨부파일의 원본 파일명 앞에 `0_`, `b_` 등의 불필요한 문자가 함께 표시되는 문제가 발생했습니다.
 
 #### 원인
 
-첨부파일은 서버에 날짜 경로와 UUID가 포함된 형태로 저장하고 있었습니다.
+업로드한 파일은 서버에 저장될 때 날짜 경로와 UUID가 포함된 형태로 저장됩니다.
 
 ```text
 /2026/09/20/s_2ee174ab-872d-4d5e-a37a-333dfe4c2320_북적북적 홍보포스터.png
 ```
 
-화면에 원본 파일명만 표시하기 위해 Mapper에서 고정된 위치를 기준으로  
-`SUBSTR`을 사용하고 있었습니다.
+수정 화면에서는 사용자에게 원본 파일명만 보여주기 위해 Mapper에서 `SUBSTR`을 사용하여 앞부분을 제거하고 있었습니다.
 
 ```sql
 SUBSTR(TITLE, 50) AS TITLE
 ```
 
-이로 인해 저장 경로나 파일명 길이에 따라 문자열이 정확하게 제거되지 않는 문제가 발생했습니다.
+하지만 문자열의 고정된 위치를 기준으로 파일명을 잘라내는 방식이었기 때문에 저장 경로나 파일명에 따라 일부 문자가 함께 남는 문제가 발생했습니다.
 
 #### 해결
 
-고정된 위치를 기준으로 문자열을 자르는 대신,  
-파일 저장 규칙을 기준으로 경로와 UUID를 제거하도록 `REGEXP_REPLACE`를 적용했습니다.
+고정된 위치를 기준으로 문자열을 자르는 대신, 파일 저장 형식을 기준으로 경로와 UUID를 제거하도록 `REGEXP_REPLACE`를 사용했습니다.
 
 ```sql
 REGEXP_REPLACE(TITLE, '^.*/[sb]_[^_]+_', '') AS TITLE
 ```
 
-실제 파일 경로는 `FILES`에 그대로 유지하고,  
-화면에 표시되는 `TITLE`만 가공하도록 수정했습니다.
+DB에 저장된 실제 파일 경로는 파일 조회와 삭제에 사용해야 하므로 `FILES`에 그대로 유지하고, 화면에 출력되는 `TITLE`만 원본 파일명으로 가공했습니다.
 
 ```xml
 <select id="fileList" resultType="com.mis.domain.BoardFileVO">
@@ -713,16 +706,16 @@ REGEXP_REPLACE(TITLE, '^.*/[sb]_[^_]+_', '') AS TITLE
 
 ---
 
-## 8. 시연 영상
-
-🎥 [프로젝트 시연 영상](영상 링크)
-
----
-
 ## 9. 프로젝트를 통해 배운 점
 
-JSP/Servlet으로 구현한 프로젝트를 Spring MVC로 직접 리팩토링하며  
-요청 처리, 비즈니스 로직, 데이터 접근을 계층별로 분리하는 이유를 이해할 수 있었습니다.
+기존 JSP/Servlet 프로젝트를 Spring MVC로 직접 리팩토링하며, 단순히 프레임워크를 사용하는 것을 넘어 **계층을 분리하는 이유와 각 계층의 역할**을 이해할 수 있었습니다.
 
-또한 FK 제약조건 오류와 파일명 처리 문제를 해결하는 과정에서  
-데이터 관계와 파일 저장 구조를 고려하여 문제의 원인을 파악하고 해결하는 경험을 쌓았습니다.
+기존 프로젝트에서는 기능별로 Servlet을 생성하고, 각 Servlet에서 요청 파라미터 처리와 DAO 호출, 화면 이동을 담당했습니다. 기능이 추가되면서 Servlet의 수도 함께 증가했고, 이를 Spring MVC로 전환하면서 관련 요청은 Controller에서 관리하고, 비즈니스 로직은 Service, 데이터 접근은 DAO, SQL은 MyBatis Mapper로 분리했습니다. 이 과정을 통해 **기능 확장과 유지보수를 고려하여 각 계층의 역할을 분리하는 것이 중요하다는 점**을 배웠습니다.
+
+또한 기존 기능을 그대로 옮기는 데 그치지 않고 공지사항 기능을 추가하고, 단일 이미지 업로드 방식을 Ajax 기반 다중 파일 업로드 방식으로 개선하며 **기존 구조에 새로운 기능을 확장하는 경험**을 할 수 있었습니다.
+
+개발 과정에서 발생한 FK 제약조건 오류를 해결하며 테이블 간 관계와 데이터 삭제 순서의 중요성을 확인했고, 여러 데이터 변경이 하나의 작업으로 처리되는 경우 **트랜잭션을 통해 데이터 일관성을 보장해야 한다는 점**을 배웠습니다.
+
+첨부파일의 원본 파일명이 정상적으로 표시되지 않는 문제를 해결하는 과정에서는 화면에 보이는 결과만 확인하는 것이 아니라, **파일의 저장 규칙과 DB에 저장된 데이터를 함께 추적하여 문제의 원인을 파악하는 경험**을 했습니다.
+
+이번 프로젝트를 통해 기능 구현에 그치지 않고, **코드와 데이터의 흐름을 이해하여 문제의 원인을 파악하고 유지보수와 기능 확장을 고려해 구조를 설계하는 관점**을 익힐 수 있었습니다.
