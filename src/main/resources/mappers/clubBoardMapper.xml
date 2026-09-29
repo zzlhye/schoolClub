@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mis.mapper.ClubBoardMapper">
+
+	<insert id="create">
+		<selectKey keyProperty="boardNum" resultType="int" order="BEFORE">
+			SELECT CLUBBOARD_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+
+		INSERT INTO CLUBBOARD (BOARDNUM, TITLE, CONTENT, REGDATE, VIEWCOUNT, STUDENTID, CLUBNUM)
+		VALUES (#{boardNum}, #{title}, #{content}, SYSDATE, 0, #{studentId}, #{clubNum})
+	</insert>
+
+
+	<select id="read" resultType="com.mis.domain.ClubBoardVO">
+		SELECT B.BOARDNUM, B.TITLE, B.CONTENT, B.REGDATE, M.STUDENTID, M.NAME, C.CLUBNUM, C.CLUBNAME
+		FROM CLUBBOARD B JOIN MEMBER M ON B.STUDENTID = M.STUDENTID JOIN CLUB C ON C.CLUBNUM = B.CLUBNUM
+		WHERE BOARDNUM = #{boardNum}
+	</select>
+
+
+	<update id="update">
+		UPDATE CLUBBOARD SET TITLE = #{title}, CONTENT = #{content}
+		WHERE BOARDNUM = #{boardNum}
+	</update>
+
+
+	<delete id="delete">
+		DELETE FROM CLUBBOARD
+		WHERE BOARDNUM = #{boardNum}
+	</delete>
+
+
+	<delete id="deleteClub">
+		DELETE FROM CLUBBOARD
+		WHERE CLUBNUM = #{clubNum}
+	</delete>
+
+
+	<delete id="deleteMember">
+		DELETE FROM CLUBBOARD
+		WHERE STUDENTID = #{studentId}
+	</delete>
+
+	<delete id="deleteMemberFile">
+		DELETE FROM BOARDFILE
+		WHERE BOARDNUM IN (
+		SELECT BOARDNUM
+		FROM CLUBBOARD
+		WHERE STUDENTID = #{studentId}
+		)
+	</delete>
+
+	<select id="mainBoardList"
+		resultType="com.mis.domain.ClubBoardVO">
+		<![CDATA[ 
+		SELECT * FROM (SELECT B.BOARDNUM, B.TITLE, B.CONTENT, B.REGDATE, B.VIEWCOUNT, M.STUDENTID, M.NAME, C.CLUBNUM, C.CLUBNAME
+		FROM CLUBBOARD B JOIN MEMBER M ON B.STUDENTID = M.STUDENTID JOIN CLUB C ON C.CLUBNUM = B.CLUBNUM 
+		ORDER BY B.BOARDNUM DESC) 
+		WHERE ROWNUM <= 5
+		]]>
+	</select>
+
+
+	<select id="boardList" resultType="com.mis.domain.ClubBoardVO">
+		SELECT B.BOARDNUM, B.TITLE, B.CONTENT, B.REGDATE, B.VIEWCOUNT, M.STUDENTID, M.NAME, C.CLUBNUM, C.CLUBNAME
+		FROM CLUBBOARD B JOIN MEMBER M ON B.STUDENTID = M.STUDENTID JOIN CLUB C ON C.CLUBNUM = B.CLUBNUM
+		ORDER BY B.BOARDNUM DESC
+	</select>
+
+
+	<select id="myBoard5List"
+		resultType="com.mis.domain.ClubBoardVO">
+		<![CDATA[ 
+		SELECT * FROM (SELECT B.BOARDNUM, B.TITLE, B.CONTENT, B.REGDATE, B.VIEWCOUNT, M.STUDENTID, M.NAME, C.CLUBNUM, C.CLUBNAME
+		FROM CLUBBOARD B JOIN MEMBER M ON B.STUDENTID = M.STUDENTID JOIN CLUB C ON C.CLUBNUM = B.CLUBNUM
+		WHERE B.STUDENTID = #{studentId} 
+		ORDER BY B.BOARDNUM DESC) 
+		WHERE ROWNUM <= 5
+		]]>
+	</select>
+
+
+	<select id="myBoardList" resultType="com.mis.domain.ClubBoardVO">
+		SELECT B.BOARDNUM, B.TITLE, B.CONTENT, B.REGDATE, B.VIEWCOUNT, M.STUDENTID, M.NAME, C.CLUBNUM, C.CLUBNAME
+		FROM CLUBBOARD B JOIN MEMBER M ON B.STUDENTID = M.STUDENTID JOIN CLUB C ON C.CLUBNUM = B.CLUBNUM
+		WHERE M.STUDENTID = #{studentId}
+		ORDER BY B.BOARDNUM DESC
+	</select>
+
+
+	<update id="viewCount">
+		UPDATE CLUBBOARD SET VIEWCOUNT = VIEWCOUNT + 1
+		WHERE BOARDNUM = #{boardNum}
+	</update>
+
+
+	<!-- 다중 파일 등록 -->
+	<insert id="insertFile">
+		<selectKey keyProperty="fileNum" resultType="int" order="BEFORE">
+			SELECT BOARDFILE_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+
+		INSERT INTO BOARDFILE (FILENUM, TITLE, REGDATE, BOARDNUM)
+		VALUES (#{fileNum}, #{title}, SYSDATE, #{boardNum})
+	</insert>
+
+
+	<!-- 다중 파일 삭제 -->
+	<delete id="deleteFile">
+		DELETE FROM BOARDFILE
+		WHERE BOARDNUM = #{boardNum}
+	</delete>
+
+	<!-- 파일만 삭제 -->
+	<delete id="onlyFileDelete">
+		DELETE FROM BOARDFILE
+		WHERE FILENUM = #{fileNum}
+	</delete>
+
+
+	<!-- 파일 목록 -->
+	<select id="fileList" resultType="com.mis.domain.BoardFileVO">
+   		SELECT  FILENUM, REGEXP_REPLACE(TITLE, '^.*/[sb]_[^_]+_', '') AS TITLE, REGDATE, TITLE AS FILES, BOARDNUM
+    	FROM BOARDFILE
+    	WHERE BOARDNUM = #{boardNum}
+	</select>
+
+</mapper>

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mis.mapper.ClubMapper">
+
+
+	<insert id="create"> 
+		<selectKey keyProperty="clubNum" resultType="int" order="BEFORE">
+			SELECT CLUB_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+		
+		INSERT INTO CLUB (CLUBNUM, CLUBNAME, CLUBINFO, REGDATE, STUDENTID)
+		VALUES (#{clubNum}, #{clubName}, #{clubInfo}, SYSDATE, #{studentId}) 
+	</insert>
+	
+	
+	<select id="read" resultType="com.mis.domain.ClubVO">
+		SELECT C.CLUBNUM, C.CLUBNAME, C.CLUBINFO, C.REGDATE, M.STUDENTID, M.MAJOR, M.NAME, M.EMAIL1, M.EMAIL2, M.PHONE
+		FROM CLUB C JOIN MEMBER M ON C.STUDENTID = M.STUDENTID 
+		WHERE C.CLUBNUM = #{clubNum} 
+	</select>
+	
+	
+	<update id="update">
+		UPDATE CLUB SET CLUBNAME = #{clubName}, CLUBINFO = #{clubInfo}, STUDENTID = #{studentId}
+		WHERE CLUBNUM = #{clubNum} 
+	</update>
+	
+	
+	<delete id="delete">
+		DELETE FROM CLUB
+		WHERE CLUBNUM = #{clubNum}
+	</delete>
+	
+	
+	<delete id="deleteMember">
+		DELETE FROM CLUB
+		WHERE STUDENTID = #{studentId}
+	</delete>
+	
+	
+	<select id="mainClubList" resultType="com.mis.domain.ClubVO">
+		<![CDATA[ 
+		SELECT * FROM (
+		SELECT C.CLUBNUM, C.CLUBNAME, C.CLUBINFO, C.REGDATE, M.STUDENTID, M.MAJOR, M.NAME, M.EMAIL1, M.EMAIL2, M.PHONE
+		FROM CLUB C JOIN MEMBER M ON C.STUDENTID = M.STUDENTID
+		ORDER BY C.CLUBNUM DESC)
+		WHERE ROWNUM <= 5
+		]]>
+	</select>
+	
+	
+	<select id="clubList" resultType="com.mis.domain.ClubVO">
+		SELECT C.CLUBNUM, C.CLUBNAME, C.CLUBINFO, C.REGDATE, M.STUDENTID, M.MAJOR, M.NAME, M.EMAIL1, M.EMAIL2, M.PHONE
+		FROM CLUB C JOIN MEMBER M ON C.STUDENTID = M.STUDENTID
+		ORDER BY C.CLUBNUM DESC
+	</select>
+	
+	
+	<select id="myClubList" resultType="com.mis.domain.ClubVO">
+		SELECT C.CLUBNUM, C.CLUBNAME, C.CLUBINFO, C.REGDATE, M.STUDENTID, M.MAJOR, M.NAME, M.EMAIL1, M.EMAIL2, M.PHONE
+		FROM CLUB C JOIN MEMBER M ON C.STUDENTID = M.STUDENTID
+		WHERE M.STUDENTID = #{studentId}
+		ORDER BY C.CLUBNUM DESC
+	</select>
+	
+	<select id="countClub" resultType="int">
+		SELECT COUNT(*) 
+		FROM CLUB
+	</select>
+
+</mapper>

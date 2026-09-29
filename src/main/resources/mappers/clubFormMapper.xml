@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.mis.mapper.ClubFormMapper">
+
+	<insert id="create">
+		<selectKey keyProperty="formNum" resultType="int" order="BEFORE">
+			SELECT CLUBFORM_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+	
+		INSERT INTO CLUBFORM (FORMNUM, FORMTITLE, FORMCONTENT, STATUS, REGDATE, STUDENTID, CLUBNUM)
+		VALUES (#{formNum}, #{formTitle}, #{formContent}, 1, SYSDATE, #{studentId}, #{clubNum})
+	</insert>
+	
+	
+	<select id="read" resultType="com.mis.domain.ClubFormVO">
+		SELECT F.FORMNUM, F.FORMTITLE, F.FORMCONTENT, F.STATUS, F.REGDATE, M.STUDENTID, M.NAME, M.MAJOR, M.EMAIL1, M.EMAIL2, M.PHONE, C.CLUBNUM, C.CLUBNAME
+		FROM CLUBFORM F JOIN MEMBER M ON F.STUDENTID = M.STUDENTID JOIN CLUB C ON C.CLUBNUM = F.CLUBNUM
+		WHERE F.FORMNUM = #{formNum}
+	</select>
+	
+	
+	<select id="clubRead" resultType="com.mis.domain.ClubFormVO">
+		SELECT F.FORMNUM, F.FORMTITLE, F.FORMCONTENT, F.STATUS, F.REGDATE, M.STUDENTID, M.NAME, M.MAJOR, M.EMAIL1, M.EMAIL2, M.PHONE, C.CLUBNUM, C.CLUBNAME
+		FROM CLUBFORM F JOIN MEMBER M ON F.STUDENTID = M.STUDENTID JOIN CLUB C ON C.CLUBNUM = F.CLUBNUM
+		WHERE C.CLUBNUM = #{clubNum} AND M.STUDENTID = #{studentId}
+	</select>
+	
+	
+	<delete id="delete">
+		DELETE FROM CLUBFORM
+		WHERE FORMNUM = #{formNum}
+	</delete>
+	
+	
+	<delete id="deleteClub">
+		DELETE FROM CLUBFORM
+		WHERE CLUBNUM = #{clubNum}
+	</delete>
+	
+	
+	<delete id="deleteClubMember">
+		DELETE FROM CLUBFORM
+		WHERE STUDENTID = #{studentId} AND CLUBNUM = #{clubNum}
+	</delete>
+	
+	
+	<delete id="deleteMember">
+		DELETE FROM CLUBFORM
+		WHERE STUDENTID = #{studentId}
+	</delete>
+	
+	
+	<select id="clubFormList" resultType="com.mis.domain.ClubFormVO">
+		SELECT F.FORMNUM, F.FORMTITLE, F.FORMCONTENT, F.STATUS, F.REGDATE, M.STUDENTID, M.NAME, M.MAJOR, M.EMAIL1, M.EMAIL2, M.PHONE, C.CLUBNUM, C.CLUBNAME
+		FROM CLUBFORM F JOIN MEMBER M ON F.STUDENTID = M.STUDENTID JOIN CLUB C ON C.CLUBNUM = F.CLUBNUM
+		WHERE F.CLUBNUM = #{clubNum}
+		ORDER BY F.FORMNUM DESC
+	</select>
+	
+	
+	<select id="myFormList" resultType="com.mis.domain.ClubFormVO">
+		SELECT F.FORMNUM, F.FORMTITLE, F.FORMCONTENT, F.STATUS, F.REGDATE, M.STUDENTID, M.NAME, M.MAJOR, M.EMAIL1, M.EMAIL2, M.PHONE, C.CLUBNUM, C.CLUBNAME
+		FROM CLUBFORM F JOIN MEMBER M ON F.STUDENTID = M.STUDENTID JOIN CLUB C ON C.CLUBNUM = F.CLUBNUM
+		WHERE F.STUDENTID = #{studentId}
+		ORDER BY F.FORMNUM DESC
+	</select>
+	
+	
+	<update id="updateApprove">
+		UPDATE CLUBFORM
+		SET STATUS = 2
+		WHERE FORMNUM = #{formNum}
+	</update>
+	
+	
+	<update id="updateReject">
+		UPDATE CLUBFORM
+		SET STATUS = 3
+		WHERE FORMNUM = #{formNum}
+	</update>
+	
+
+</mapper>

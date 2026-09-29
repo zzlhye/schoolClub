@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.mis.mapper.NoticeMapper">
+
+	<insert id="create">
+		<selectKey keyProperty="noticeNum" resultType="int" order="BEFORE">
+			SELECT NOTICE_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+		
+		INSERT INTO NOTICE (NOTICENUM, TITLE, CONTENT, REGDATE, VIEWCOUNT, STUDENTID)
+		VALUES (#{noticeNum}, #{title}, #{content}, SYSDATE, 0, #{studentId})
+	</insert>
+	
+	
+	<select id="read" resultType="com.mis.domain.NoticeVO">
+		SELECT N.NOTICENUM, N.TITLE, N.CONTENT, N.REGDATE, M.STUDENTID
+		FROM NOTICE N JOIN MEMBER M ON N.STUDENTID = M.STUDENTID
+		WHERE NOTICENUM = #{noticeNum}
+	</select>
+	
+	
+	<update id="update">
+		UPDATE NOTICE SET TITLE = #{title}, CONTENT = #{content}
+		WHERE NOTICENUM = #{noticeNum}
+	</update>
+	
+	
+	<delete id="delete">
+		DELETE FROM NOTICE
+		WHERE NOTICENUM = #{noticeNum}
+	</delete>
+	
+	
+	<select id="mainNoticeList" resultType="com.mis.domain.NoticeVO">
+		<![CDATA[ 
+		SELECT * FROM (
+		SELECT N.NOTICENUM, N.TITLE, N.CONTENT, N.REGDATE, N.VIEWCOUNT, M.STUDENTID
+		FROM NOTICE N JOIN MEMBER M ON N.STUDENTID = M.STUDENTID
+		ORDER BY N.NOTICENUM DESC)
+		WHERE ROWNUM <= 5
+		]]>
+	</select>
+	
+	
+	<select id="noticeList" resultType="com.mis.domain.NoticeVO">
+		SELECT N.NOTICENUM, N.TITLE, N.CONTENT, N.REGDATE, N.VIEWCOUNT, M.STUDENTID
+		FROM NOTICE N JOIN MEMBER M ON N.STUDENTID = M.STUDENTID
+		ORDER BY N.NOTICENUM DESC
+	</select>
+	
+	
+	<update id="viewCount">
+		UPDATE NOTICE SET VIEWCOUNT = VIEWCOUNT + 1
+		WHERE NOTICENUM = #{noticeNum}
+	</update>
+	
+	
+	<!-- 다중 파일 등록 -->
+	<insert id="insertFile"> 
+		<selectKey keyProperty="fileNum" resultType="int" order="BEFORE">
+			SELECT NOTICEFILE_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+		
+		INSERT INTO NOTICEFILE (FILENUM, TITLE, REGDATE, NOTICENUM)
+		VALUES (#{fileNum}, #{title}, SYSDATE, #{noticeNum})
+	</insert>
+	
+	
+	<!-- 다중 파일 삭제 -->
+	<delete id="deleteFile">
+		DELETE FROM NOTICEFILE
+		WHERE NOTICENUM = #{noticeNum}
+	</delete>
+	
+	<!-- 파일만 삭제 -->
+	<delete id="onlyFileDelete">
+		DELETE FROM NOTICEFILE
+		WHERE FILENUM = #{fileNum}
+	</delete>
+	
+	
+	<!-- 파일 목록 -->
+	<select id="fileList" resultType="com.mis.domain.NoticeFileVO">
+		SELECT FILENUM, REGEXP_REPLACE(TITLE, '^.*/[sb]_[^_]+_', '') AS TITLE,, REGDATE, TITLE AS FILES, NOTICENUM
+		FROM NOTICEFILE
+		WHERE NOTICENUM = #{noticeNum}
+	</select>
+
+</mapper>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.mis.mapper.ClubMemberMapper">
+
+	<insert id="create">
+		INSERT INTO CLUBMEMBER (STUDENTID, CLUBNUM, REGDATE)
+		VALUES (#{studentId}, #{clubNum}, SYSDATE)
+	</insert>
+	
+	
+	<select id="read" resultType="com.mis.domain.ClubMemberVO">
+		SELECT M.STUDENTID, C.CLUBNUM, H.REGDATE, M.NAME, M.MAJOR, M.EMAIL1, M.EMAIL2, M.PHONE, C.CLUBNAME
+		FROM MEMBER M JOIN CLUBMEMBER H ON M.STUDENTID = H.STUDENTID JOIN CLUB C ON C.CLUBNUM = H.CLUBNUM
+		WHERE H.STUDENTID = #{studentId} AND H.CLUBNUM = #{clubNum}
+	</select>
+	
+	<select id="clubRead" resultType="com.mis.domain.ClubMemberVO">
+		SELECT M.STUDENTID, C.CLUBNUM, H.REGDATE, M.NAME, M.MAJOR, M.EMAIL1, M.EMAIL2, M.PHONE, C.CLUBNAME
+		FROM MEMBER M JOIN CLUBMEMBER H ON M.STUDENTID = H.STUDENTID JOIN CLUB C ON C.CLUBNUM = H.CLUBNUM
+		WHERE H.CLUBNUM = #{clubNum}
+	</select>
+	
+	
+	<delete id="delete">
+		DELETE FROM CLUBMEMBER
+		WHERE STUDENTID = #{studentId} AND CLUBNUM = #{clubNum} 
+	</delete>
+	
+	
+	<delete id="deleteClub">
+		DELETE FROM CLUBMEMBER
+		WHERE CLUBNUM = #{clubNum} 
+	</delete>
+	
+	
+	<delete id="deleteMember">
+		DELETE FROM CLUBMEMBER
+		WHERE STUDENTID = #{studentId}
+	</delete>
+	
+	
+	<select id="clubMemberList" resultType="com.mis.domain.ClubMemberVO">
+		SELECT M.STUDENTID, C.CLUBNUM, H.REGDATE, M.NAME, M.MAJOR, M.EMAIL1, M.EMAIL2, M.PHONE, C.CLUBNAME
+		FROM MEMBER M JOIN CLUBMEMBER H ON M.STUDENTID = H.STUDENTID JOIN CLUB C ON C.CLUBNUM = H.CLUBNUM
+		WHERE H.CLUBNUM = #{clubNum}
+		ORDER BY H.REGDATE DESC
+	</select>
+	
+	
+	<select id="memberClubList" resultType="com.mis.domain.ClubMemberVO">
+		SELECT M.STUDENTID, C.CLUBNUM, H.REGDATE, M.NAME, M.MAJOR, M.EMAIL1, M.EMAIL2, M.PHONE, C.CLUBNAME
+		FROM MEMBER M JOIN CLUBMEMBER H ON M.STUDENTID = H.STUDENTID JOIN CLUB C ON C.CLUBNUM = H.CLUBNUM
+		WHERE H.STUDENTID = #{studentId}
+		ORDER BY H.REGDATE DESC
+	</select>
+	
+	<select id="countClubMember" resultType="int">
+		SELECT COUNT(*)
+		FROM CLUBMEMBER
+	</select>
+
+</mapper>
