@@ -23,16 +23,19 @@
 ## 2. 기술 스택
 
 **Backend**  
-`Java` `Spring Framework` `Spring MVC` `MyBatis` `JSP/JSTL`
+`Java` `Spring Framework` `Spring MVC` `MyBatis`
 
 **Frontend**  
-`HTML` `CSS` `JavaScript` `jQuery` `Ajax` `Bootstrap`
+`JSP` `HTML5` `CSS3` `JavaScript` `jQuery` `Ajax` `Bootstrap`
 
 **Database**  
 `Oracle`
 
+**Server**
+`Apache Tomcat`
+
 **Tools**  
-`STS` `Eclipse` `SQL Developer`
+`STS` `SQL Developer`
 
 ---
 
