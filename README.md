@@ -1,13 +1,13 @@
 # SCHOOL CLUB
 
-> 교내에 흩어져 있는 동아리 정보를 통합하고, 동아리 홍보부터 가입 신청 및 회원 관리까지 하나의 서비스에서 이용할 수 있도록 구현한 **교내 동아리 통합 관리 플랫폼**입니다.
-
-학과 수업에서 JSP/Servlet으로 개발한 기존 프로젝트를 **Spring MVC로 리팩토링**하여  
-기능별 Servlet 구조를 **Controller - Service - DAO 계층 구조로 개선**했습니다.
-
 ---
 
 ## 1. 프로젝트 소개
+> 교내에 흩어져 있는 동아리 정보를 통합하고, 동아리 홍보부터 가입 신청 및 회원 관리까지 하나의 서비스에서 이용할 수 있도록 구현한 **교내 동아리 통합 관리 플랫폼**입니다. <br>
+
+> JSP/Servlet으로 개발한 기존 프로젝트를 **Spring MVC로 리팩토링**하여, 기능별 Servlet 구조를 **Controller - Service - DAO 계층 구조로 개선**했습니다.
+
+<br>
 
 | 구분 | 내용 |
 | --- | --- |
@@ -15,24 +15,22 @@
 | 개발 기간 | 25.07.01 ~ 25.07.31 |
 | 담당 범위 | 기획 · DB 설계 · Backend |
 | 주요 작업 | JSP/Servlet → Spring MVC 리팩토링 |
-| Database | Oracle |
-| Server | Apache Tomcat |
 
 ---
 
 ## 2. 기술 스택
 
 **Backend**  
-`Java` `Spring Framework` `Spring MVC` `MyBatis`
+`Java 1.8` `Spring Framework(Spring MVC)` `MyBatis`
 
 **Frontend**  
-`JSP` `HTML5` `CSS3` `JavaScript` `jQuery` `Ajax` `Bootstrap`
+`JSP` `HTML5` `CSS3` `JavaScript` `jQuery` `Bootstrap`
 
 **Database**  
-`Oracle`
+`Oracle 11g`
 
-**Server**  
-`Apache Tomcat`
+**WAS**  
+`Apache Tomcat 9.0`
 
 **Tools**  
 `STS` `SQL Developer`
@@ -63,7 +61,7 @@
 
 ### 관리자
 
-- 회원 조회 / 삭제
+- 회원 관리
 - 동아리 및 게시판 관리
 
 ---
@@ -162,7 +160,7 @@ erDiagram
 
 ### 리팩토링 배경
 
-> 기존 JSP/Servlet 프로젝트는 기능별로 Servlet을 생성하는 구조로, 기능이 늘어나면서 Servlet의 수가 많아지고 코드 관리가 복잡해졌습니다.  
+> 기존 JSP/Servlet 프로젝트는 기능별로 Servlet을 생성하는 구조로, 기능이 추가되면서 Servlet이 약 30개까지 증가하여 코드 관리와 유지보수가 복잡해졌습니다.
 > 이를 개선하고 기능 확장과 유지보수가 용이한 구조로 변경하기 위해 Spring MVC 기반으로 리팩토링했습니다.
 
 ### 구조 변화
