@@ -534,13 +534,11 @@ public void delete(String studentId) throws Exception {
 
 #### 원인
 
-업로드된 파일은 날짜 경로와 UUID가 포함된 이름으로 저장되며, 화면에서는 SUBSTR을 사용해 원본 파일명만 추출하고 있었습니다.
+SUBSTR을 사용해 저장 경로와 UUID를 제거했지만, 문자열을 고정된 위치에서 잘라내는 방식이라 파일명에 따라 일부 문자가 남았습니다.
 
 ```sql
 SUBSTR(TITLE, 50) AS TITLE
 ```
-
-하지만 고정된 위치를 기준으로 문자열을 잘라내면서 파일명 앞에 일부 문자가 남는 문제가 있었습니다.
 
 #### 해결
 
